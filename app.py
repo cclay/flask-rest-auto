@@ -13,7 +13,7 @@ myapp.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 api = Api(myapp)
 
-
+TXT_FIELDS = ["description","engine","make","year","owner"]
 #in memory test db
 db = {
 	'id1': {
@@ -37,7 +37,7 @@ db = {
 
 parser = reqparse.RequestParser()
 parser.add_argument('json_str', type=str)
-parser.add_argument('picture', type=werkzeug.datastructures.FileStorage,
+parser.add_argument('photoupload', type=werkzeug.datastructures.FileStorage,
 					location='files')
 
 
@@ -73,13 +73,16 @@ def tester():
 
 
 class Car(Resource):
-	def get(self, c_id):
+	def get(self, car_id):
+		if not db.has_key("id"+str(car_id)):
+			msg = "Invalid car id requested"
+			return msg, 404
 		return db[c_id]
 
-	def delete(self, c_id):
+	def delete(self, car_id):
 		pass
 
-	def put(self, c_id):
+	def put(self, car_id):
 		pass
 
 class CarList(Resource):
@@ -87,39 +90,51 @@ class CarList(Resource):
 		return db
 
 	def post(self):
-		args = parser.parse_args()
-		for afile in request.files:
-			print afile
-			dat = request.files['photo'].read()
-			request.files['photo'].seek(0)
-			print "leno f data is: %d" % (len(dat))
-			fil = request.files['photo']
-			
-			save_file(fil)
-			#save_file(fil)
+		args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
+		if args['json_str'] == None:
+			msg = "communicate with json inside field : 'json_str'"
+			return msg,404
 
-		print "="*10
-		
 		js_dict = json.loads(args['json_str'])
-		print "parse json is"
+		car_id = len(db) + 1
+		if not(args['photoupload'] and has_valid_fields(js_dict,TXT_FIELDS)):
+			msg = "Bad fields in json"
+			return msg,404
 
-		js_dict["photo"] = "notset"
-		db[c_id] = js_dict
-		return db[c_id], 201
+		photo_savepath="not set"
+		if request.files.has_key('photoupload'):
+			photo_file = request.files['photoupload']
+			photo_savepath = "./static/images/"+ photo_file.filename
+			save_file(photo_file,photo_savepath)
+
+	
+		js_dict["photo"] = photo_savepath[1:] #remove the .
+		db[car_id] = js_dict
+		return db[car_id], 201
 
 
-def save_file(fil):
-	name = fil.filename
+
+def save_file(fil,path):
+	data = fil.read()
 	try:
-		f = open("./static/images/"+name,"wb")
-		f.write(dat)
+		path = path.encode('ascii','ignore')
+		f = open(path,"wb")
+		f.write(data)
 		f.close()
+		return path
 	except IOError as e:
 		print e
+		return ""
+
+def has_valid_fields(field_dictionary,list_of_fields):
+	for field in list_of_fields:
+		if not field_dictionary.has_key(field):
+			return False
+	return True
 
 #Add resources after defining above
 api.add_resource(CarList, '/cars')
-api.add_resource(Car, '/cars/<string:c_id>')
+api.add_resource(Car, '/cars/<string:car_id>')
 
 if __name__ == '__main__':
 	app_port = argv[1] if len(argv) > 1 else 8080
