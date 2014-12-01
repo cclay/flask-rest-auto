@@ -22,14 +22,14 @@ db = {
 			"make":"honda",
 			"year":"1988",
 			"name":"john",
-			"photo":"/static/restauto/images/default.jpg"
+			"photo":"/static/images/default.jpg"
 			},
 	'id2': {	"description":"rhog",
 			"engine":"1300",
 			"make":"honda",
 			"year":"1988",
 			"name":"john",
-			"photo":"/static/restauto/images/default.jpg"
+			"photo":"/static/images/default.jpg"
 			},
 
 }
