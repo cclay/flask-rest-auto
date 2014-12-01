@@ -34,6 +34,11 @@ db = {
 
 }
 
+def set_db_item(car_id,item_data):
+	key = 'id'+str(car_id)
+	db[key] = item_data
+	return db[key]
+
 
 parser = reqparse.RequestParser()
 parser.add_argument('json_str', type=str)
@@ -83,7 +88,22 @@ class Car(Resource):
 		pass
 
 	def put(self, car_id):
-		pass
+		args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
+		if args['json_str'] == None:
+			msg = "communicate with json inside field : 'json_str'"
+			return msg,404
+
+		js_dict = json.loads(args['json_str'])
+		if not(args['photoupload'] and has_valid_fields(js_dict,TXT_FIELDS)):
+			msg = "Bad fields in json"
+			return msg,404
+
+		photo_savepath = save_photoupload(request,car_id)
+
+	
+		js_dict["photo"] = photo_savepath[1:] #remove the .
+		new_item = set_db_item(car_id,js_dict)
+		return new_item, 200
 
 class CarList(Resource):
 	def get(self):
@@ -101,18 +121,27 @@ class CarList(Resource):
 			msg = "Bad fields in json"
 			return msg,404
 
-		photo_savepath="not set"
-		if request.files.has_key('photoupload'):
-			photo_file = request.files['photoupload']
-			photo_savepath = "./static/images/"+ photo_file.filename
-			save_file(photo_file,photo_savepath)
+		photo_savepath = save_photoupload(request,car_id)
 
 	
 		js_dict["photo"] = photo_savepath[1:] #remove the .
-		db[car_id] = js_dict
-		return db[car_id], 201
+		new_item = set_db_item(car_id,js_dict)
+		return new_item, 201
 
 
+
+def save_photoupload(request,car_id):
+	photo_savepath="not set"
+	if request.files.has_key('photoupload'):
+		photo_file = request.files['photoupload']
+		unique_filename = get_clean_filename(photo_file.filename,car_id)
+		photo_savepath = "./static/images/"+ unique_filename
+		save_file(photo_file,photo_savepath)
+	return photo_savepath
+
+def get_clean_filename(filename,car_id):
+	name = filename.replace("../","").replace("./","")
+	return str(car_id) + "_" + name
 
 def save_file(fil,path):
 	data = fil.read()
@@ -125,6 +154,7 @@ def save_file(fil,path):
 	except IOError as e:
 		print e
 		return ""
+
 
 def has_valid_fields(field_dictionary,list_of_fields):
 	for field in list_of_fields:
