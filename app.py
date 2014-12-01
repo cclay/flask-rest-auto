@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, Response
 from flask.ext.restful import reqparse, abort, Api, Resource
 from sys import argv
 import werkzeug
@@ -6,14 +6,46 @@ import os
 import json
 
 
+UPLOAD_FOLDER = './images'
 myapp = Flask(__name__)
+
 api = Api(myapp)
 
 #Fields sent in text, and not binary (photo field)
 TXT_FIELDS = ["description","engine","make","year","owner"]
 
 #in memory test db
-db = {
+class MemDatabase():
+	def __init__(self):
+		self.db = {}
+	def init_data(self,data):
+		self.db = data
+
+	def get_all_items(self):
+		return self.db
+
+	def set_item(self,car_id, item_data):
+		key = 'id'+str(car_id)
+		self.db[key] = item_data
+		return self.db[key]
+
+	def get_item(self,car_id):
+		return self.db["id"+str(car_id)]
+
+	def contains(self,car_id):
+		if self.db.has_key("id"+str(car_id)):
+			return True
+		else:
+			return False
+
+	def remove_item(self,car_id):
+		if self.contains(car_id):
+			del self.db["id"+str(car_id)]
+	def get_size(self):
+		return len(self.db)
+
+
+db_data = {
 	'id1': {
 			"description":"roadster",
 			"engine":"1300",
@@ -32,10 +64,8 @@ db = {
 
 }
 
-def set_db_item(car_id,item_data):
-	key = 'id'+str(car_id)
-	db[key] = item_data
-	return db[key]
+db = MemDatabase()
+db.init_data(db_data)
 
 
 
@@ -59,33 +89,24 @@ def index():
 	ret += "</html>"
 	return ret
 
-@myapp.route('/test', methods=[ 'POST', 'PUT', 'GET'])
-def tester():
-	
-	ret = ""
-	ret += "\n<br/>method is : %s" % request.method
-	ret += "\n<br/>files are : %s" % str(request.files)
-	ret += "\n<br/>form are : %s" % str(request.form)
-	ret += "\n<br/>json are : %s" % str(request.get_json())
-	if len(request.files) > 0:
-		ret += '\n<br/>file is : %s' % str(request.files[0])
-	ret += "\n<br/> data is: %s" % str(request.data)
-	ret += "\n"
-	return ret
-
 
 
 
 class Car(Resource):
 	def get(self, car_id):
-		id_key = "id"+str(car_id)
-		if not db.has_key(id_key):
+		
+		if not db.contains(car_id):
 			msg = "Invalid car id requested"
 			return msg, 404
-		return db[id_key]
+		return db.get_item(car_id)
 
 	def delete(self, car_id):
-		pass
+		if not db.contains(car_id):
+			msg = "Can't delete, no value for id"
+			return msg, 404
+
+		db.remove_item(car_id)
+		return {}, 200
 
 	def put(self, car_id):
 		args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
@@ -102,12 +123,12 @@ class Car(Resource):
 
 	
 		js_dict["photo"] = photo_savepath[1:] #remove the .
-		new_item = set_db_item(car_id,js_dict)
+		new_item = db.set_item(car_id,js_dict)
 		return new_item, 200
 
 class CarList(Resource):
 	def get(self):
-		return db
+		return db.get_all_items()
 
 	def post(self):
 		args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
@@ -116,7 +137,7 @@ class CarList(Resource):
 			return msg,404
 
 		js_dict = json.loads(args['json_str'])
-		car_id = len(db) + 1
+		car_id = db.get_size() + 1
 		if not(args['photoupload'] and has_valid_fields(js_dict,TXT_FIELDS)):
 			msg = "Bad fields in json"
 			return msg,404
@@ -125,8 +146,8 @@ class CarList(Resource):
 
 	
 		js_dict["photo"] = photo_savepath[1:] #remove the .
-		new_item = set_db_item(car_id,js_dict)
-		return new_item, 201
+		new_item = db.set_item(car_id,js_dict)
+		return new_item, 201,{'Location':'/cars/'+str(car_id)}
 
 
 

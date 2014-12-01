@@ -3,14 +3,15 @@ import unittest
 from flask import Flask,request
 import app
 import json
+import os
 
 
 
-
-class TestGet(unittest.TestCase):
+class TestRest(unittest.TestCase):
 	def setUp(self):
 		
-		app.db = {
+		
+		test_data = {
 				  "id1":{
 						"description":"timecar",
 						"engine":"333",
@@ -28,6 +29,7 @@ class TestGet(unittest.TestCase):
 						"photo":"/static/images/default.jpg"
 						}
 					}
+		app.db.init_data(test_data)
 
 		self.app = app.myapp
 		self.test_client = app.myapp.test_client()
@@ -71,6 +73,15 @@ class TestGet(unittest.TestCase):
 		response = self.test_client.post('/cars',data=post_data)
 		# print response.data
 		self.assertEqual(response.status_code,201)
+		json_data = json.loads(response.data)
+		self.assertEqual(len(json_data),6)
+
+		location = response.headers['Location']
+		new_id_num = location.split('/')[-1]
+		unique_file_path = json_data["photo"]
+		unique_file_name = os.path.basename(unique_file_path)
+		id_num_prefix = unique_file_name.split("_")[0]
+		self.assertEqual(id_num_prefix,new_id_num)
 		
 
 	def test_post_bad_json(self):
@@ -91,7 +102,7 @@ class TestGet(unittest.TestCase):
 
 	def test_put_good_json_good_photo(self):
 		car_id = "1"
-		old_item = app.db["id"+car_id]
+		old_item = app.db.get_item(car_id)
 		put_filename="test2.jpg"
 		test_file = open(put_filename)
 		json_str = '{"description":"Silver Shine","engine":"490PR","make":"toyota",\
@@ -101,7 +112,7 @@ class TestGet(unittest.TestCase):
 		response = self.test_client.put(path,data=post_data)
 
 		self.assertEqual(response.status_code,200)
-		new_item = app.db["id"+car_id]
+		new_item = app.db.get_item(car_id)
 		self.assertEqual(old_item["description"], "timecar")
 		self.assertEqual(old_item["engine"], "333")
 		self.assertEqual(old_item["make"], "delorian")
@@ -136,7 +147,28 @@ class TestGet(unittest.TestCase):
 		response = self.test_client.put(path,data=post_data)
 		self.assertEqual(response.status_code,404)
 
+	def test_delete_id(self):
+		car_id = "1"
+		original_size = app.db.get_size()
+		self.assertTrue(app.db.contains(car_id))
+		
+		path = '/cars/' + car_id
+		response = self.test_client.delete(path)
+		self.assertEqual(response.status_code,200)
+		size_after_delete = app.db.get_size()
+		self.assertEqual(original_size - 1, size_after_delete)
+		self.assertFalse(app.db.contains(car_id))
 
+	def test_delete_invalid_id(self):
+		car_id = "900"
+		path = '/cars/' + car_id
+		response = self.test_client.delete(path)
+		self.assertEqual(response.status_code,404)
+
+		car_id = "myCar"
+		path = '/cars/' + car_id
+		response = self.test_client.delete(path)
+		self.assertEqual(response.status_code,404)
 
 
 if __name__ == '__main__':
