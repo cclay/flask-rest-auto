@@ -6,14 +6,12 @@ import os
 import json
 
 
-UPLOAD_FOLDER = './images'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 myapp = Flask(__name__)
-myapp.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 api = Api(myapp)
 
+#Fields sent in text, and not binary (photo field)
 TXT_FIELDS = ["description","engine","make","year","owner"]
+
 #in memory test db
 db = {
 	'id1': {
@@ -38,6 +36,7 @@ def set_db_item(car_id,item_data):
 	key = 'id'+str(car_id)
 	db[key] = item_data
 	return db[key]
+
 
 
 parser = reqparse.RequestParser()
@@ -79,10 +78,11 @@ def tester():
 
 class Car(Resource):
 	def get(self, car_id):
-		if not db.has_key("id"+str(car_id)):
+		id_key = "id"+str(car_id)
+		if not db.has_key(id_key):
 			msg = "Invalid car id requested"
 			return msg, 404
-		return db[c_id]
+		return db[id_key]
 
 	def delete(self, car_id):
 		pass

@@ -44,6 +44,17 @@ class TestGet(unittest.TestCase):
 		json_data = json.loads(response.data)
 		self.assertEqual(len(json_data),2)
 
+	def test_get_single(self):
+		car_id = "1"
+		path = '/cars/' + car_id
+		response = self.test_client.get(path)
+		json_data = json.loads(response.data)
+		self.assertEqual(len(json_data),6)
+		
+		for field in app.TXT_FIELDS:
+			self.assertTrue(json_data.has_key(field))
+		self.assertTrue(json_data.has_key("photo"))
+
 	def test_get_invalid_car_id(self):
 		response = self.test_client.get('/cars/elvis')
 		self.assertEqual(response.status_code,404)
