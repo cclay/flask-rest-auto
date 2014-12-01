@@ -12,8 +12,7 @@ myapp = Flask(__name__)
 myapp.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 api = Api(myapp)
-api.add_resource(CarList, '/cars')
-api.add_resource(Car, '/cars/<string:c_id>')
+
 
 #in memory test db
 db = {
@@ -108,6 +107,7 @@ class CarList(Resource):
 		db[c_id] = js_dict
 		return db[c_id], 201
 
+
 def save_file(fil):
 	name = fil.filename
 	try:
@@ -117,8 +117,9 @@ def save_file(fil):
 	except IOError as e:
 		print e
 
-
-
+#Add resources after defining above
+api.add_resource(CarList, '/cars')
+api.add_resource(Car, '/cars/<string:c_id>')
 
 if __name__ == '__main__':
 	app_port = argv[1] if len(argv) > 1 else 8080
