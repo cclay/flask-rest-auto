@@ -11,6 +11,7 @@ myapp = Flask(__name__)
 
 api = Api(myapp)
 
+
 #Fields sent in text, and not binary (photo field)
 TXT_FIELDS = ["description","engine","make","year","owner"]
 
@@ -18,8 +19,15 @@ TXT_FIELDS = ["description","engine","make","year","owner"]
 class MemDatabase():
 	def __init__(self):
 		self.db = {}
+		self.counter = 0
+
 	def init_data(self,data):
 		self.db = data
+		self.counter = len(data)
+
+	def increment_id(self):
+		self.counter += 1
+		return self.counter
 
 	def get_all_items(self):
 		return self.db
@@ -94,6 +102,7 @@ def uploaded_file(filename):
 
 @myapp.route('/')
 def index():
+	print myapp.config["SERVER_NAME"]
 	ret = "<html>"
 	for i in os.environ:
 		ret += str(i) + " : " + os.environ[i] 
@@ -168,7 +177,7 @@ class CarList(Resource):
 			return msg,404
 
 		js_dict = json.loads(args['json_str'])
-		car_id = db.get_size() + 1
+		car_id = db.increment_id()
 		if not(args['photoupload'] and has_all_valid_fields(js_dict,TXT_FIELDS)):
 			msg = "Bad fields in json"
 			return msg,404
