@@ -14,15 +14,12 @@ API supports GET,POST,PUT,DELETE, and PATCH
 
 ### json structure for curl:
 ```sh
-{"json_str":{
-        "description":"timecar",
-      "engine":"333",
-      "make":"delorian",
-      "year":"1900",
-      "owner":"john",
-      },
- "photoupload": <Binary data>
- }
+curl -X POST -v \
+  -H "Content-Type: multipart/form-data" \
+  -F "photoupload=@script_photo.jpg"  \
+  -F 'json_str={"description":"speedy","engine":"pv300","make":"honda","year":"1990","owner":"Don d."}' \
+  http://limitless-coast-3433.herokuapp.com/cars
+
 ```
 
 ###testing http server with curl
@@ -48,11 +45,6 @@ The photo would be accessible via a static folder at:
 http://limitless-coast-3433.herokuapp.com/static/images/default.jpg
 ```
 
-###python testing
-tests are located in the tests.py file
-```sh
-    $ python tests.py
-```
 
 ### Setting up to run locally
 Clone, Install requirements into a virtualenv, then run:
@@ -65,4 +57,10 @@ Clone, Install requirements into a virtualenv, then run:
   $ pip install -r requirements.txt
   $ python app.py
   $ deactivate # Stop virtualenv when you are done
+```
+
+###python testing
+tests are located in the tests.py file
+```sh
+    $ python tests.py
 ```
