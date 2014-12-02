@@ -27,6 +27,7 @@ API supports GET,POST,PUT,DELETE, and PATCH
 
 ###testing http server with curl
 There is a server running at http://limitless-coast-3433.herokuapp.com/
+the rest endpoint is at http://limitless-coast-3433.herokuapp.com/cars
 
 To test out the REST-api on the heroku server, use the scripts inside the heroku_curl_tests folder
  ```sh
