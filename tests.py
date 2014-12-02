@@ -107,9 +107,9 @@ class TestRest(unittest.TestCase):
 		test_file = open(put_filename)
 		json_str = '{"description":"Silver Shine","engine":"490PR","make":"toyota",\
 		"year":"1984","owner":"h.g. wells"}'
-		post_data = {'json_str':json_str,'photoupload':test_file}
+		put_data = {'json_str':json_str,'photoupload':test_file}
 		path = '/cars/' + str(car_id)
-		response = self.test_client.put(path,data=post_data)
+		response = self.test_client.put(path,data=put_data)
 
 		self.assertEqual(response.status_code,200)
 		new_item = app.db.get_item(car_id)
@@ -133,18 +133,18 @@ class TestRest(unittest.TestCase):
 		test_file = None
 		json_str = '{"description":"Silver Shine","engine":"490PR","make":"toyota",\
 		"year":"1984","owner":"h.g. wells"}'
-		post_data = {'json_str':json_str,'photoupload':test_file}
+		put_data = {'json_str':json_str,'photoupload':test_file}
 		path = '/cars/' + str(car_id)
-		response = self.test_client.put(path,data=post_data)
+		response = self.test_client.put(path,data=put_data)
 		self.assertEqual(response.status_code,404)
 
 	def test_put_bad_json_failure(self):
 		car_id = "1"
 		test_file = open("test.png")
 		json_str = '{"description":"Silver Shine"}'
-		post_data = {'json_str':json_str,'photoupload':test_file}
+		put_data = {'json_str':json_str,'photoupload':test_file}
 		path = '/cars/' + str(car_id)
-		response = self.test_client.put(path,data=post_data)
+		response = self.test_client.put(path,data=put_data)
 		self.assertEqual(response.status_code,404)
 
 	def test_delete_id(self):
@@ -170,6 +170,33 @@ class TestRest(unittest.TestCase):
 		response = self.test_client.delete(path)
 		self.assertEqual(response.status_code,404)
 
+	def test_PATCH_good_json_good_photo(self):
+		car_id = "1"
+		old_item = app.db.get_item(car_id)
+		patch_filename="test2.jpg"
+		test_file = open(patch_filename)
+		json_str = '{"description":"Newly Done Silver Shine, See Photo"}'
+		patch_data = {'json_str':json_str,'photoupload':test_file}
+		path = '/cars/' + str(car_id)
+		response = self.test_client.patch(path,data=patch_data)
+
+		self.assertEqual(response.status_code,200)
+		new_item = app.db.get_item(car_id)
+
+		unchanged_fields = ["engine","make","year","owner"]
+		for field in unchanged_fields:
+			self.assertEqual(new_item[field],old_item[field])
+		
+		self.assertNotEqual(new_item["description"],old_item["description"])
+		self.assertNotEqual(new_item["photo"],old_item["photo"])
+
+	def test_PATCH_bad_json(self):
+		car_id = "1"
+		json_str = '{"description":"Updated for 2014: Transmission","wingspan":"20m"}'
+		patch_data = {'json_str':json_str,'photoupload':None}
+		path = '/cars/' + car_id
+		response = self.test_client.put(path,data=patch_data)
+		self.assertEqual(response.status_code,404)
 
 if __name__ == '__main__':
 	unittest.main()

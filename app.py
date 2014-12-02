@@ -29,6 +29,18 @@ class MemDatabase():
 		self.db[key] = item_data
 		return self.db[key]
 
+	def partially_update_item(self,car_id, partial_item_data):
+		key = 'id'+str(car_id)
+		item = self.db[key]
+		new_item_data = {}
+		for field in partial_item_data.keys():
+			new_item_data[field] = partial_item_data[field]
+
+		for field in item.keys():
+			if not field in partial_item_data.keys():
+				new_item_data[field] = item[field]
+		self.set_item(car_id,new_item_data)
+
 	def get_item(self,car_id):
 		return self.db["id"+str(car_id)]
 
@@ -115,16 +127,35 @@ class Car(Resource):
 			return msg,404
 
 		js_dict = json.loads(args['json_str'])
-		if not(args['photoupload'] and has_valid_fields(js_dict,TXT_FIELDS)):
+		if not(args['photoupload'] and has_all_valid_fields(js_dict,TXT_FIELDS)):
 			msg = "Bad fields in json"
 			return msg,404
 
 		photo_savepath = save_photoupload(request,car_id)
-
-	
 		js_dict["photo"] = photo_savepath[1:] #remove the .
+
 		new_item = db.set_item(car_id,js_dict)
 		return new_item, 200
+
+	def patch(self, car_id):
+		args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
+		if args['json_str'] == None:
+			msg = "communicate with json inside field : 'json_str'"
+			return msg,404
+
+		js_dict = json.loads(args['json_str'])
+		if not has_valid_fields(js_dict,TXT_FIELDS):
+			msg = "Bad fields in json"
+			return msg,404
+
+		if args['photoupload']:
+			photo_savepath = save_photoupload(request,car_id)
+			js_dict["photo"] = photo_savepath[1:] #remove the .
+
+		
+		db.partially_update_item(car_id,js_dict)
+		patched_item = db.get_item(car_id)
+		return patched_item, 200
 
 class CarList(Resource):
 	def get(self):
@@ -138,7 +169,7 @@ class CarList(Resource):
 
 		js_dict = json.loads(args['json_str'])
 		car_id = db.get_size() + 1
-		if not(args['photoupload'] and has_valid_fields(js_dict,TXT_FIELDS)):
+		if not(args['photoupload'] and has_all_valid_fields(js_dict,TXT_FIELDS)):
 			msg = "Bad fields in json"
 			return msg,404
 
@@ -176,10 +207,15 @@ def save_file(fil,path):
 		print e
 		return ""
 
+def has_valid_fields(dictionary,list_of_fields):
+	for field in dictionary.keys():
+		if not field in list_of_fields:
+			return False
+	return True
 
-def has_valid_fields(field_dictionary,list_of_fields):
+def has_all_valid_fields(dictionary,list_of_fields):
 	for field in list_of_fields:
-		if not field_dictionary.has_key(field):
+		if not dictionary.has_key(field):
 			return False
 	return True
 
