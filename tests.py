@@ -113,6 +113,7 @@ class TestRest(unittest.TestCase):
 
 		self.assertEqual(response.status_code,200)
 		new_item = app.db.get_item(car_id)
+
 		self.assertEqual(old_item["description"], "timecar")
 		self.assertEqual(old_item["engine"], "333")
 		self.assertEqual(old_item["make"], "delorian")
