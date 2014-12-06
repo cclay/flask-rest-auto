@@ -74,6 +74,9 @@ class MemDatabase():
     def get_size(self):
         return len(self.db)
 
+#Fields sent in text, and not binary (photo field)
+TXT_FIELDS = ["description","engine","make","year","owner"]
+
 
 db_data = {
     'id1': {
@@ -110,6 +113,7 @@ def uploaded_file(filename):
 
 @myapp.route('/')
 def index():
+
     print myapp.config["SERVER_NAME"]
     ret = "<html>"
     for i in os.environ:
@@ -251,10 +255,51 @@ def has_all_valid_fields(dictionary, list_of_fields):
             return False
     return True
 
+
+
+
+def save_photoupload(request,car_id):
+	photo_savepath="not set"
+	if request.files.has_key('photoupload'):
+		photo_file = request.files['photoupload']
+		unique_filename = get_clean_filename(photo_file.filename,car_id)
+		photo_savepath = "./static/images/"+ unique_filename
+		save_file(photo_file,photo_savepath)
+	return photo_savepath
+
+def get_clean_filename(filename,car_id):
+	name = filename.replace("../","").replace("./","")
+	return str(car_id) + "_" + name
+
+def save_file(fil,path):
+	data = fil.read()
+	try:
+		path = path.encode('ascii','ignore')
+		f = open(path,"wb")
+		f.write(data)
+		f.close()
+		return path
+	except IOError as e:
+		print e
+		return ""
+
+def has_valid_fields(dictionary,list_of_fields):
+	for field in dictionary.keys():
+		if not field in list_of_fields:
+			return False
+	return True
+
+def has_all_valid_fields(dictionary,list_of_fields):
+	for field in list_of_fields:
+		if not dictionary.has_key(field):
+			return False
+	return True
+
+
 #Add resources after defining above
 api.add_resource(CarList, '/cars')
 api.add_resource(Car, '/cars/<string:car_id>')
 
 if __name__ == '__main__':
-    app_port = argv[1] if len(argv) > 1 else 8080
-    myapp.run(debug=True, port=int(app_port))
+	app_port = argv[1] if len(argv) > 1 else 8080
+	myapp.run(debug=True,port=int(app_port))

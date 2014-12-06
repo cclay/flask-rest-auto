@@ -14,6 +14,7 @@ API supports GET,POST,PUT,DELETE, and PATCH
 
 ### json structure for curl:
 ```sh
+
 curl -X POST -v \
   -H "Content-Type: multipart/form-data" \
   -F "photoupload=@script_photo.jpg"  \
@@ -44,6 +45,7 @@ The photo would be accessible via a static folder at:
 ```sh
 http://limitless-coast-3433.herokuapp.com/static/images/default.jpg
 ```
+
 
 
 ### Setting up to run locally
