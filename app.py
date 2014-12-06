@@ -127,42 +127,42 @@ def invalid_data_checker(REST_method):
         the REST request, and return an appropriate error response
         based on the type of method used'''
         args = parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
-        if args['json_str'] == None:
-            msg = "communicate with json inside field : 'json_str'"
-            return msg, 404
+        if REST_method.__name__ in ["get","delete","put","patch"]:
+            if not db.contains(car_id):
+                msg = "Invalid car id"
+                return msg, 404
 
-        js_dict = json.loads(args['json_str'])
-        if REST_method.__name__ in ["post","put"]:
-            if not (args['photoupload'] and has_all_valid_fields(js_dict, TXT_FIELDS)):
-                msg = "Bad fields in json"
+
+        if REST_method.__name__ in ["post","put","patch"]:
+            if args['json_str'] == None:
+                msg = "communicate with json inside field : 'json_str'"
                 return msg, 404
-        elif REST_method.__name__ == "patch":
-            if not has_valid_fields(js_dict, TXT_FIELDS):
-                msg = "Bad fields in json"
-                return msg, 404
+            js_dict = json.loads(args['json_str'])
+            if REST_method.__name__ in ["post","put"]:
+                if not (args['photoupload'] and has_all_valid_fields(js_dict, TXT_FIELDS)):
+                    msg = "Bad fields in json"
+                    return msg, 404
+            elif REST_method.__name__ == "patch":
+                if not has_valid_fields(js_dict, TXT_FIELDS):
+                    msg = "Bad fields in json"
+                    return msg, 404
 
 
         if REST_method.__name__ == "post":
             return REST_method(self)
-        elif REST_method.__name__ in ["put","patch"]:
+        elif REST_method.__name__ in ["put","patch","delete","get"]:
             return REST_method(self, car_id)
 
     return check_data
 
 
 class Car(Resource):
+    @invalid_data_checker
     def get(self, car_id):
-
-        if not db.contains(car_id):
-            msg = "Invalid car id requested"
-            return msg, 404
         return db.get_item(car_id)
 
+    @invalid_data_checker
     def delete(self, car_id):
-        if not db.contains(car_id):
-            msg = "Can't delete, no value for id"
-            return msg, 404
-
         db.remove_item(car_id)
         return {}, 200
 
