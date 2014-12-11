@@ -1,10 +1,9 @@
 import unittest
 
-from flask import Flask,request
 import app
 import json
 import os
-
+from jsontextfields import TXT_FIELDS
 
 
 class TestRest(unittest.TestCase):
@@ -41,14 +40,19 @@ class TestRest(unittest.TestCase):
         json_data = json.loads(response.data)
         self.assertEqual(len(json_data),2)
 
+    def test_get_direct(self):
+        from app import CarList
+        values = CarList().get()
+        self.assertEqual(2, len(values))
+        #self.fail()
+
     def test_get_single(self):
-        car_id = "1"
-        path = '/cars/' + car_id
+        path = '/cars/1'
         response = self.test_client.get(path)
         json_data = json.loads(response.data)
         self.assertEqual(len(json_data),6)
 
-        for field in app.TXT_FIELDS:
+        for field in TXT_FIELDS:
             self.assertTrue(json_data.has_key(field))
         self.assertTrue(json_data.has_key("photo"))
 

@@ -1,6 +1,7 @@
 __author__ = 'cscharfe'
 import json
 from jsontextfields import TXT_FIELDS
+from requestparser import args_parser
 
 def has_valid_fields(dictionary, list_of_fields):
     for field in dictionary:
@@ -20,9 +21,9 @@ class InvalidDataException(Exception):
 
 
 class InvalidDataChecker(object):
-    def __init__(self, db, parser,  **kwargs):
+    def __init__(self, db,  **kwargs):
         self.db = db
-        self.parser = parser
+        self.args_parser = args_parser
         self.rest_method = None
 
     def __call__(self, car_method):
@@ -56,7 +57,7 @@ class InvalidDataChecker(object):
         the REST request, and return an appropriate error response
         based on the type of method used
         """
-        args = self.parser.parse_args()  # (json_str : {... }, 'photoupload' : <file>)
+        args = self.args_parser()  # (json_str : {... }, 'photoupload' : <file>)
         if self.rest_method in ["get", "delete", "put", "patch"]:
             self._must_contain_car_id(car_id)
 
