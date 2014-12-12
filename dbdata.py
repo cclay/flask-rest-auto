@@ -4,14 +4,14 @@ DB_DATA = {
         "engine": "1300",
         "make": "honda",
         "year": "1988",
-        "name": "john",
+        "owner": "john",
         "photo": "/static/images/default.jpg"
     },
     'id2': {"description": "rhog",
             "engine": "1300",
             "make": "honda",
             "year": "1988",
-            "name": "john",
+            "owner": "john",
             "photo": "/static/images/default.jpg"
     },
 

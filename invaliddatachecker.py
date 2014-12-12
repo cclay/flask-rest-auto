@@ -4,16 +4,12 @@ from jsontextfields import TXT_FIELDS
 from requestparser import args_parser
 
 def has_valid_fields(dictionary, list_of_fields):
-    for field in dictionary:
-        if not field in list_of_fields:
-            return False
-    return True
+    return any([field in list_of_fields for field in dictionary])
+
 
 def has_all_valid_fields(dictionary, list_of_fields):
-    for field in list_of_fields:
-        if not field in dictionary:
-            return False
-    return True
+    return all([field in dictionary for field in list_of_fields])
+
 
 
 class InvalidDataException(Exception):
