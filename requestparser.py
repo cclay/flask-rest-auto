@@ -1,10 +1,10 @@
 __author__ = 'cscharfe'
 import werkzeug
-from flask_restful import reqparse
+from flask_restful.reqparse import RequestParser
 import json
 
 def args_parser():
-    parser = reqparse.RequestParser()
+    parser = RequestParser()
     parser.add_argument('json_str', type=str)
     parser.add_argument('photoupload', type=werkzeug.datastructures.FileStorage,
                         location='files')

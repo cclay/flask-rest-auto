@@ -3,12 +3,12 @@ import json
 from jsontextfields import TXT_FIELDS
 from requestparser import args_parser
 
-def has_valid_fields(dictionary, list_of_fields):
-    return any([field in list_of_fields for field in dictionary])
+def has_some_valid_fields(dictionary, valid_fields):
+    return any([field in valid_fields for field in dictionary])
 
 
-def has_all_valid_fields(dictionary, list_of_fields):
-    return all([field in dictionary for field in list_of_fields])
+def has_all_valid_fields(dictionary, valid_fields):
+    return all([field in dictionary for field in valid_fields])
 
 
 
@@ -45,7 +45,7 @@ class InvalidDataChecker(object):
              raise InvalidDataException("Bad fields in json")
 
     def _has_no_valid_field(self, js_dict):
-        if not has_valid_fields(js_dict, TXT_FIELDS):
+        if not has_some_valid_fields(js_dict, TXT_FIELDS):
             raise InvalidDataException("Bad fields in json")
 
     def check_data(self, car_id=None):
